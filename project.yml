@@ -1,0 +1,39 @@
+name: TheTrades
+options:
+  bundleIdPrefix: com.thetrades
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "16.0"
+  generateEmptyDirectories: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+packages:
+  Nuke:
+    url: https://github.com/kean/Nuke.git
+    from: "12.8.0"
+targets:
+  TheTrades:
+    type: application
+    platform: iOS
+    sources:
+      - path: TheTrades
+        excludes:
+          - "App/Secrets.example.swift"
+    dependencies:
+      - package: Nuke
+        product: NukeUI
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: true
+        INFOPLIST_KEY_CFBundleDisplayName: TheTrades
+        INFOPLIST_KEY_UILaunchScreen_Generation: true
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
+  TheTradesTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - TheTradesTests
+    dependencies:
+      - target: TheTrades
