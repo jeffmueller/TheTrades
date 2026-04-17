@@ -41,6 +41,8 @@ struct MediaRow: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 2)
+        .contentShape(Rectangle())
     }
 }

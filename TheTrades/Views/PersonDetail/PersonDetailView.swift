@@ -1,5 +1,6 @@
 import SwiftUI
 import NukeUI
+import UIKit
 
 struct PersonDetailView: View {
     let personID: Int
@@ -52,6 +53,13 @@ struct PersonDetailView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text(person.name)
                     .font(.title2.bold())
+                    .contextMenu {
+                        Button {
+                            UIPasteboard.general.string = person.name
+                        } label: {
+                            Label("Copy Name", systemImage: "doc.on.doc")
+                        }
+                    }
 
                 if let age = person.age {
                     if person.isDeceased {

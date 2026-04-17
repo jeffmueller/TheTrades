@@ -145,7 +145,9 @@ struct TVShowDetailView: View {
                                     .foregroundStyle(.secondary)
                                 }
                             }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.vertical, 2)
+                            .contentShape(Rectangle())
                         }
                     }
                 }
