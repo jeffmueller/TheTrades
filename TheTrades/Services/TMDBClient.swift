@@ -23,6 +23,26 @@ actor TMDBClient {
         ])
     }
 
+    // MARK: - Discover
+
+    func trendingAllWeek(page: Int = 1) async throws -> PagedResponse<SearchResult> {
+        try await fetch("/trending/all/week", queryItems: [
+            URLQueryItem(name: "page", value: String(page)),
+        ])
+    }
+
+    func popularMovies(page: Int = 1) async throws -> PagedResponse<MovieSearchResult> {
+        try await fetch("/movie/popular", queryItems: [
+            URLQueryItem(name: "page", value: String(page)),
+        ])
+    }
+
+    func popularTVShows(page: Int = 1) async throws -> PagedResponse<TVSearchResult> {
+        try await fetch("/tv/popular", queryItems: [
+            URLQueryItem(name: "page", value: String(page)),
+        ])
+    }
+
     // MARK: - Movie
 
     func movieDetail(id: Int) async throws -> Movie {
@@ -35,7 +55,7 @@ actor TMDBClient {
 
     func tvShowDetail(id: Int) async throws -> TVShow {
         try await fetch("/tv/\(id)", queryItems: [
-            URLQueryItem(name: "append_to_response", value: "credits"),
+            URLQueryItem(name: "append_to_response", value: "credits,videos"),
         ])
     }
 

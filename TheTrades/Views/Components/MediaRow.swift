@@ -44,5 +44,15 @@ struct MediaRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 2)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private var accessibilityLabel: String {
+        var parts = [title]
+        if let year { parts.append(year) }
+        if let role, !role.isEmpty { parts.append(role) }
+        if let ageAtRelease { parts.append("aged \(ageAtRelease) at release") }
+        return parts.joined(separator: ", ")
     }
 }

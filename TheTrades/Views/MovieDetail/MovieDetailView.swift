@@ -4,7 +4,7 @@ import NukeUI
 struct MovieDetailView: View {
     let movieID: Int
 
-    @Environment(AppState.self) private var appState
+    @Environment(LibraryStore.self) private var library
     @State private var movie: Movie?
     @State private var birthdays: [Int: String] = [:]
     @State private var isLoading = true
@@ -24,7 +24,10 @@ struct MovieDetailView: View {
         .navigationTitle(movie?.title ?? "Movie")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if movie != nil {
+            if let movie {
+                ToolbarItem(placement: .topBarTrailing) {
+                    BookmarkButton(item: .movie(id: movie.id, title: movie.title, year: movie.year, posterPath: movie.posterPath))
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     ShareLink(item: TMDBURLBuilder.movie(id: movieID)) {
                         Label("Share", systemImage: "square.and.arrow.up")
@@ -52,8 +55,9 @@ struct MovieDetailView: View {
             .overlay {
                 LinearGradient(
                     stops: [
-                        .init(color: .clear, location: 0.3),
-                        .init(color: .black.opacity(0.8), location: 1.0),
+                        .init(color: .clear, location: 0.0),
+                        .init(color: .black.opacity(0.35), location: 0.55),
+                        .init(color: .black.opacity(0.9), location: 1.0),
                     ],
                     startPoint: .top,
                     endPoint: .bottom
@@ -91,6 +95,7 @@ struct MovieDetailView: View {
                     .foregroundStyle(.white.opacity(0.85))
                 }
                 .padding(.bottom, 10)
+                .shadow(color: .black.opacity(0.5), radius: 4, y: 1)
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 16)
@@ -127,8 +132,15 @@ struct MovieDetailView: View {
                     .lineSpacing(2)
             }
 
+            let trailers = movie.videos?.trailers ?? []
+            if !trailers.isEmpty {
+                DetailSection(title: "Trailers") {
+                    TrailerCarousel(videos: trailers)
+                }
+            }
+
             if let credits = movie.credits {
-                let directors = credits.crew.filter { $0.job == "Director" }
+                let directors = credits.directors
                 if !directors.isEmpty {
                     DetailSection(title: "Director\(directors.count > 1 ? "s" : "")") {
                         ForEach(directors) { member in
@@ -153,9 +165,7 @@ struct MovieDetailView: View {
                     }
                 }
 
-                let keyCrew = credits.crew.filter {
-                    ["Producer", "Writer", "Screenplay", "Director of Photography", "Original Music Composer"].contains($0.job)
-                }
+                let keyCrew = credits.keyCrew
                 if !keyCrew.isEmpty {
                     DetailSection(title: "Crew") {
                         ForEach(keyCrew) { member in
@@ -180,20 +190,13 @@ struct MovieDetailView: View {
         do {
             let result = try await TMDBClient.shared.movieDetail(id: movieID)
             movie = result
-            appState.addRecentlyViewed(
+            library.addRecentlyViewed(
                 .movie(id: result.id, title: result.title, year: result.year, posterPath: result.posterPath)
             )
 
             // Fetch birthdays for cast & crew in background
             if let credits = result.credits {
-                let allIDs = Set(
-                    credits.cast.prefix(20).map(\.id) +
-                    credits.crew.filter {
-                        ["Director", "Producer", "Writer", "Screenplay", "Director of Photography", "Original Music Composer"].contains($0.job)
-                    }.map(\.id)
-                )
-                let fetched = await TMDBClient.shared.fetchBirthdays(for: Array(allIDs))
-                birthdays = fetched
+                birthdays = await TMDBClient.shared.fetchBirthdays(for: credits.personIDs())
             }
         } catch {
             self.error = error.localizedDescription

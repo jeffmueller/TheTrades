@@ -14,6 +14,13 @@ struct PagedResponse<T: Decodable & Sendable>: Decodable, Sendable {
 
 struct VideoResults: Codable, Sendable, Hashable {
     let results: [Video]
+
+    /// YouTube trailers and teasers, with trailers ordered first.
+    var trailers: [Video] {
+        results
+            .filter { $0.site == "YouTube" && ($0.type == "Trailer" || $0.type == "Teaser") }
+            .sorted { ($0.type == "Trailer" ? 0 : 1) < ($1.type == "Trailer" ? 0 : 1) }
+    }
 }
 
 struct Video: Identifiable, Codable, Sendable, Hashable {
@@ -26,5 +33,10 @@ struct Video: Identifiable, Codable, Sendable, Hashable {
     var youtubeURL: URL? {
         guard site == "YouTube" else { return nil }
         return URL(string: "https://www.youtube.com/watch?v=\(key)")
+    }
+
+    var thumbnailURL: URL? {
+        guard site == "YouTube" else { return nil }
+        return URL(string: "https://img.youtube.com/vi/\(key)/hqdefault.jpg")
     }
 }

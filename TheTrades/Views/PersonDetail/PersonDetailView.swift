@@ -5,7 +5,7 @@ import UIKit
 struct PersonDetailView: View {
     let personID: Int
 
-    @Environment(AppState.self) private var appState
+    @Environment(LibraryStore.self) private var library
     @State private var person: Person?
     @State private var isLoading = true
     @State private var error: String?
@@ -29,7 +29,10 @@ struct PersonDetailView: View {
         .navigationTitle(person?.name ?? "Person")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if person != nil {
+            if let person {
+                ToolbarItem(placement: .topBarTrailing) {
+                    BookmarkButton(item: .person(id: person.id, name: person.name, department: person.knownForDepartment, profilePath: person.profilePath))
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     ShareLink(item: TMDBURLBuilder.person(id: personID)) {
                         Label("Share", systemImage: "square.and.arrow.up")
@@ -46,7 +49,8 @@ struct PersonDetailView: View {
             PosterImage(
                 url: ImageURLBuilder.profileURL(path: person.profilePath, size: .w185),
                 width: 120,
-                height: 180
+                height: 180,
+                placeholderSymbol: "person.fill"
             )
             .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
 
@@ -170,7 +174,7 @@ struct PersonDetailView: View {
         do {
             let result = try await TMDBClient.shared.personDetail(id: personID)
             person = result
-            appState.addRecentlyViewed(
+            library.addRecentlyViewed(
                 .person(id: result.id, name: result.name, department: result.knownForDepartment, profilePath: result.profilePath)
             )
         } catch {

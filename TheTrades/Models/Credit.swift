@@ -5,6 +5,31 @@ struct Credits: Codable, Sendable, Hashable {
     let crew: [CrewMember]
 }
 
+extension Credits {
+    /// Crew jobs surfaced (alongside directors) in the detail views.
+    static let keyCrewJobs: Set<String> = [
+        "Producer", "Writer", "Screenplay", "Director of Photography", "Original Music Composer",
+    ]
+
+    var directors: [CrewMember] {
+        crew.filter { $0.job == "Director" }
+    }
+
+    var keyCrew: [CrewMember] {
+        crew.filter { Self.keyCrewJobs.contains($0.job ?? "") }
+    }
+
+    /// Unique person IDs to fetch birthdays for: the top `castLimit` cast members,
+    /// plus directors and key crew when `includeCrew` is set.
+    func personIDs(castLimit: Int = 20, includeCrew: Bool = true) -> [Int] {
+        var ids = cast.prefix(castLimit).map(\.id)
+        if includeCrew {
+            ids += directors.map(\.id) + keyCrew.map(\.id)
+        }
+        return Array(Set(ids))
+    }
+}
+
 struct CastMember: Identifiable, Codable, Sendable, Hashable {
     let id: Int
     let name: String

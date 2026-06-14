@@ -1,12 +1,15 @@
 import Foundation
 
-struct RecentlyViewedItem: Identifiable, Codable, Sendable, Hashable {
+/// A lightweight, persistable reference to something the user has saved or viewed
+/// (a movie, TV show, or person). Used for both the Saved watchlist and the
+/// Recently Viewed history — `addedAt` records when it entered whichever list holds it.
+struct LibraryItem: Identifiable, Codable, Sendable, Hashable {
     let id: String
     let title: String
     let subtitle: String?
     let imagePath: String?
     let destination: CodableDestination
-    let viewedAt: Date
+    var addedAt: Date
 
     enum CodableDestination: Codable, Sendable, Hashable {
         case movie(id: Int)
@@ -36,38 +39,43 @@ struct RecentlyViewedItem: Identifiable, Codable, Sendable, Hashable {
             case .person: return "person"
             }
         }
+
+        var isPerson: Bool {
+            if case .person = self { return true }
+            return false
+        }
     }
 
-    static func movie(id: Int, title: String, year: String?, posterPath: String?) -> RecentlyViewedItem {
-        RecentlyViewedItem(
+    static func movie(id: Int, title: String, year: String?, posterPath: String?) -> LibraryItem {
+        LibraryItem(
             id: "movie-\(id)",
             title: title,
             subtitle: year,
             imagePath: posterPath,
             destination: .movie(id: id),
-            viewedAt: Date()
+            addedAt: Date()
         )
     }
 
-    static func tvShow(id: Int, name: String, yearRange: String?, posterPath: String?) -> RecentlyViewedItem {
-        RecentlyViewedItem(
+    static func tvShow(id: Int, name: String, yearRange: String?, posterPath: String?) -> LibraryItem {
+        LibraryItem(
             id: "tv-\(id)",
             title: name,
             subtitle: yearRange,
             imagePath: posterPath,
             destination: .tvShow(id: id),
-            viewedAt: Date()
+            addedAt: Date()
         )
     }
 
-    static func person(id: Int, name: String, department: String?, profilePath: String?) -> RecentlyViewedItem {
-        RecentlyViewedItem(
+    static func person(id: Int, name: String, department: String?, profilePath: String?) -> LibraryItem {
+        LibraryItem(
             id: "person-\(id)",
             title: name,
             subtitle: department,
             imagePath: profilePath,
             destination: .person(id: id),
-            viewedAt: Date()
+            addedAt: Date()
         )
     }
 }

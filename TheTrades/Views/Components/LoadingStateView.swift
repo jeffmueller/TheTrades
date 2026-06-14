@@ -7,21 +7,27 @@ struct LoadingStateView<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        if isLoading {
-            ProgressView()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if let error {
-            ContentUnavailableView {
-                Label("Error", systemImage: "exclamationmark.triangle")
-            } description: {
-                Text(error)
-            } actions: {
-                Button("Retry") {
-                    Task { await retry() }
+        ZStack {
+            if isLoading {
+                ProgressView()
+                    .controlSize(.large)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if let error {
+                ContentUnavailableView {
+                    Label("Error", systemImage: "exclamationmark.triangle")
+                } description: {
+                    Text(error)
+                } actions: {
+                    Button("Retry") {
+                        Task { await retry() }
+                    }
+                    .buttonStyle(.bordered)
                 }
+            } else {
+                content()
+                    .transition(.opacity)
             }
-        } else {
-            content()
         }
+        .animation(.easeOut(duration: 0.25), value: isLoading)
     }
 }

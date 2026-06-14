@@ -4,7 +4,7 @@ import NukeUI
 struct TVShowDetailView: View {
     let tvShowID: Int
 
-    @Environment(AppState.self) private var appState
+    @Environment(LibraryStore.self) private var library
     @State private var tvShow: TVShow?
     @State private var birthdays: [Int: String] = [:]
     @State private var isLoading = true
@@ -24,7 +24,10 @@ struct TVShowDetailView: View {
         .navigationTitle(tvShow?.name ?? "TV Show")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if tvShow != nil {
+            if let tvShow {
+                ToolbarItem(placement: .topBarTrailing) {
+                    BookmarkButton(item: .tvShow(id: tvShow.id, name: tvShow.name, yearRange: tvShow.yearRange, posterPath: tvShow.posterPath))
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     ShareLink(item: TMDBURLBuilder.tvShow(id: tvShowID)) {
                         Label("Share", systemImage: "square.and.arrow.up")
@@ -52,8 +55,9 @@ struct TVShowDetailView: View {
             .overlay {
                 LinearGradient(
                     stops: [
-                        .init(color: .clear, location: 0.3),
-                        .init(color: .black.opacity(0.8), location: 1.0),
+                        .init(color: .clear, location: 0.0),
+                        .init(color: .black.opacity(0.35), location: 0.55),
+                        .init(color: .black.opacity(0.9), location: 1.0),
                     ],
                     startPoint: .top,
                     endPoint: .bottom
@@ -84,6 +88,7 @@ struct TVShowDetailView: View {
                     .foregroundStyle(.white.opacity(0.85))
                 }
                 .padding(.bottom, 10)
+                .shadow(color: .black.opacity(0.5), radius: 4, y: 1)
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 16)
@@ -118,6 +123,13 @@ struct TVShowDetailView: View {
                 Text(overview)
                     .font(.body)
                     .lineSpacing(2)
+            }
+
+            let trailers = tvShow.videos?.trailers ?? []
+            if !trailers.isEmpty {
+                DetailSection(title: "Trailers") {
+                    TrailerCarousel(videos: trailers)
+                }
             }
 
             if let seasons = tvShow.seasons, !seasons.isEmpty {
@@ -176,15 +188,13 @@ struct TVShowDetailView: View {
         do {
             let result = try await TMDBClient.shared.tvShowDetail(id: tvShowID)
             tvShow = result
-            appState.addRecentlyViewed(
+            library.addRecentlyViewed(
                 .tvShow(id: result.id, name: result.name, yearRange: result.yearRange, posterPath: result.posterPath)
             )
 
             // Fetch birthdays for cast in background
             if let credits = result.credits, !credits.cast.isEmpty {
-                let castIDs = Array(Set(credits.cast.prefix(20).map(\.id)))
-                let fetched = await TMDBClient.shared.fetchBirthdays(for: castIDs)
-                birthdays = fetched
+                birthdays = await TMDBClient.shared.fetchBirthdays(for: credits.personIDs(includeCrew: false))
             }
         } catch {
             self.error = error.localizedDescription

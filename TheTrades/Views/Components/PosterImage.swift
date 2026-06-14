@@ -5,6 +5,7 @@ struct PosterImage: View {
     let url: URL?
     var width: CGFloat = 100
     var height: CGFloat = 150
+    var placeholderSymbol: String = "film"
 
     var body: some View {
         LazyImage(url: url) { state in
@@ -23,7 +24,7 @@ struct PosterImage: View {
                 Rectangle()
                     .fill(.quaternary)
                     .overlay {
-                        Image(systemName: "film")
+                        Image(systemName: placeholderSymbol)
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                     }

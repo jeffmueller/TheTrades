@@ -14,7 +14,8 @@ struct CastRow: View {
                 PosterImage(
                     url: ImageURLBuilder.profileURL(path: profilePath, size: .w185),
                     width: 40,
-                    height: 60
+                    height: 60,
+                    placeholderSymbol: "person.fill"
                 )
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
@@ -40,6 +41,15 @@ struct CastRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, 2)
             .contentShape(Rectangle())
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(accessibilityLabel)
         }
+    }
+
+    private var accessibilityLabel: String {
+        var parts = [name]
+        if let role, !role.isEmpty { parts.append(role) }
+        if let ageAtRelease { parts.append("aged \(ageAtRelease)") }
+        return parts.joined(separator: ", ")
     }
 }

@@ -14,6 +14,7 @@ struct TVShow: Identifiable, Codable, Sendable, Hashable {
     let genres: [Genre]?
     let seasons: [SeasonSummary]?
     let credits: Credits?
+    let videos: VideoResults?
     let tagline: String?
 
     var firstYear: String? {

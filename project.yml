@@ -35,5 +35,8 @@ targets:
     platform: iOS
     sources:
       - TheTradesTests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: true
     dependencies:
       - target: TheTrades

@@ -39,6 +39,46 @@ enum SearchResult: Identifiable, Decodable, Sendable, Hashable {
     }
 }
 
+extension SearchResult {
+    var appDestination: AppDestination {
+        switch self {
+        case .movie(let m): return .movie(id: m.id)
+        case .tvShow(let t): return .tvShow(id: t.id)
+        case .person(let p): return .person(id: p.id)
+        }
+    }
+
+    var displayTitle: String {
+        switch self {
+        case .movie(let m): return m.title
+        case .tvShow(let t): return t.name
+        case .person(let p): return p.name
+        }
+    }
+
+    var typeLabel: String {
+        switch self {
+        case .movie: return "Movie"
+        case .tvShow: return "TV"
+        case .person: return "Person"
+        }
+    }
+
+    var isPerson: Bool {
+        if case .person = self { return true }
+        return false
+    }
+
+    /// Poster path for movie/TV, profile path for a person.
+    var imagePath: String? {
+        switch self {
+        case .movie(let m): return m.posterPath
+        case .tvShow(let t): return t.posterPath
+        case .person(let p): return p.profilePath
+        }
+    }
+}
+
 struct MovieSearchResult: Identifiable, Decodable, Sendable, Hashable {
     let id: Int
     let title: String
