@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xcodegen generate:*)",
+      "Bash(xcodebuild -project TheTrades.xcodeproj -scheme TheTrades -destination 'platform=iOS Simulator,name=iPhone 16' -quiet build)",
+      "Bash(sudo xcode-select:*)",
+      "Bash(DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project TheTrades.xcodeproj -scheme TheTrades -destination 'platform=iOS Simulator,name=iPhone 16' -quiet build)",
+      "Bash(DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -project TheTrades.xcodeproj -scheme TheTrades -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build)",
+      "Bash(claude skill:*)",
+      "Read(//usr/local/bin/**)",
+      "Read(//opt/homebrew/bin/**)",
+      "Read(//Users/jeff/.claude/**)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.themoviedb.org)",
+      "Bash(sips -g pixelWidth -g pixelHeight /Users/jeff/Code/iOS/TheTrades/TheTrades.png)"
+    ]
+  }
+}

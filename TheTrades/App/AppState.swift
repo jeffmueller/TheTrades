@@ -9,6 +9,19 @@ final class AppState {
     var settingsPath = NavigationPath()
     var selectedTab: AppTab = .discover
 
+    /// A binding to `tab`'s back stack, for shells that give each tab its own
+    /// long-lived `NavigationStack` (the tab bar does; the sidebar does not).
+    func pathBinding(for tab: AppTab) -> Binding<NavigationPath> {
+        switch tab {
+        case .discover:
+            return Binding(get: { self.discoverPath }, set: { self.discoverPath = $0 })
+        case .saved:
+            return Binding(get: { self.savedPath }, set: { self.savedPath = $0 })
+        case .settings:
+            return Binding(get: { self.settingsPath }, set: { self.settingsPath = $0 })
+        }
+    }
+
     // Discover feed
     var discoverSections: [DiscoverSection] = []
     var isLoadingDiscover = false

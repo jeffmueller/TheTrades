@@ -7,7 +7,7 @@ struct TheTradesApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootTabView()
+            RootView()
                 .tint(.accentColor)
                 .environment(appState)
                 .environment(library)

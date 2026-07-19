@@ -3,6 +3,7 @@ import SwiftUI
 struct DiscoverView: View {
     @Environment(AppState.self) private var appState
     @Environment(LibraryStore.self) private var library
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     var body: some View {
         @Bindable var appState = appState
@@ -24,7 +25,7 @@ struct DiscoverView: View {
                     .buttonStyle(.bordered)
                 }
             } else if !appState.searchResults.isEmpty {
-                searchResultsList
+                searchResultsContent
             } else if appState.searchText.isEmpty {
                 homeView
             } else {
@@ -152,38 +153,62 @@ struct DiscoverView: View {
 
     // MARK: - Search Results (filtered + paginated)
 
+    /// Rows in compact width; a poster grid once there's room for columns.
+    @ViewBuilder
+    private var searchResultsContent: some View {
+        if appState.filteredSearchResults.isEmpty {
+            ContentUnavailableView(
+                "No \(appState.searchFilter.title)",
+                systemImage: "magnifyingglass",
+                description: Text("No results of this type. Try another filter.")
+            )
+        } else if horizontalSizeClass == .regular {
+            searchResultsGrid
+        } else {
+            searchResultsList
+        }
+    }
+
+    private var searchResultsGrid: some View {
+        ScrollView {
+            PosterGrid(
+                cards: appState.filteredSearchResults.map { PosterCardModel($0) },
+                onCardAppear: { loadMoreIfLast(id: $0.id) }
+            )
+            .padding(.vertical, 20)
+
+            if appState.isLoadingMore {
+                ProgressView()
+                    .padding(.bottom, 24)
+            }
+        }
+    }
+
     private var searchResultsList: some View {
         List {
-            if appState.filteredSearchResults.isEmpty {
-                ContentUnavailableView(
-                    "No \(appState.searchFilter.title)",
-                    systemImage: "magnifyingglass",
-                    description: Text("No results of this type. Try another filter.")
-                )
-                .listRowBackground(Color.clear)
-            } else {
-                ForEach(appState.filteredSearchResults) { result in
-                    NavigationLink(value: result.appDestination) {
-                        UnifiedSearchRow(result: result)
-                    }
-                    .onAppear {
-                        if result.id == appState.filteredSearchResults.last?.id {
-                            Task { await appState.loadMoreSearchResults() }
-                        }
-                    }
+            ForEach(appState.filteredSearchResults) { result in
+                NavigationLink(value: result.appDestination) {
+                    UnifiedSearchRow(result: result)
                 }
+                .onAppear { loadMoreIfLast(id: result.id) }
+            }
 
-                if appState.isLoadingMore {
-                    HStack {
-                        Spacer()
-                        ProgressView()
-                        Spacer()
-                    }
-                    .listRowSeparator(.hidden)
+            if appState.isLoadingMore {
+                HStack {
+                    Spacer()
+                    ProgressView()
+                    Spacer()
                 }
+                .listRowSeparator(.hidden)
             }
         }
         .listStyle(.insetGrouped)
+    }
+
+    /// Pages in the next batch once the last row/cell comes on screen.
+    private func loadMoreIfLast(id: String) {
+        guard id == appState.filteredSearchResults.last?.id else { return }
+        Task { await appState.loadMoreSearchResults() }
     }
 }
 
