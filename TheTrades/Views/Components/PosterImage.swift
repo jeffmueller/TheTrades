@@ -28,7 +28,7 @@ struct PosterImage: View {
             if let image = state.image {
                 image
                     .resizable()
-                    .aspectRatio(contentMode: .fill)
+                    .scaledToFill()
             } else if state.isLoading {
                 Rectangle()
                     .fill(.quaternary)

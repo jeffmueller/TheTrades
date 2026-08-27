@@ -45,7 +45,7 @@ struct MovieDetailView: View {
                 if let image = state.image {
                     image
                         .resizable()
-                        .aspectRatio(contentMode: .fill)
+                        .scaledToFill()
                 } else {
                     Rectangle().fill(.quaternary)
                 }

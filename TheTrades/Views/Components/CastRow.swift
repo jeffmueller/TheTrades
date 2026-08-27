@@ -6,7 +6,7 @@ struct CastRow: View {
     let name: String
     let role: String?
     let profilePath: String?
-    var ageAtRelease: Int? = nil
+    var ageAtRelease: Int?
 
     var body: some View {
         NavigationLink(value: AppDestination.person(id: id)) {

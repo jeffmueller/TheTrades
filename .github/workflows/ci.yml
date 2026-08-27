@@ -1,0 +1,150 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# No secrets are used anywhere in this workflow, so it runs identically for
+# pull requests from forks. The app builds and its tests pass without a TMDB
+# token: requests fail with TMDBError.missingAPIToken, and the test suite
+# stubs MediaFetching rather than hitting the network.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    env:
+      DERIVED_DATA: .derived-data
+      SPM_CACHE: .spm-cache
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      # The macos-15 image ships Xcode 16.x, which satisfies SWIFT_VERSION 6.0
+      # with complete strict concurrency. An iOS 17 deployment target builds
+      # fine against a newer SDK.
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Install XcodeGen
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+          HOMEBREW_NO_ANALYTICS: 1
+        run: brew install xcodegen
+
+      - name: Cache Swift package checkouts
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.SPM_CACHE }}
+          key: spm-${{ runner.os }}-${{ hashFiles('Package.resolved') }}
+          restore-keys: spm-${{ runner.os }}-
+
+      # TheTrades.xcodeproj is generated and gitignored, so the SwiftPM pins
+      # cannot live in their usual place inside it. They are tracked at the
+      # repo root and copied in here.
+      - name: Generate Xcode project
+        run: |
+          xcodegen generate
+          mkdir -p TheTrades.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
+          cp Package.resolved \
+             TheTrades.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+
+      - name: Resolve packages
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project TheTrades.xcodeproj \
+            -clonedSourcePackagesDirPath "$SPM_CACHE"
+
+      # Device names come and go between runner images, so pick a UDID from
+      # whatever the runner actually has instead of naming a model. `xcodebuild
+      # test` rejects a generic simulator destination, so build and test share
+      # one concrete UDID (which also lets them share DerivedData).
+      - name: Pick a simulator
+        id: sim
+        run: |
+          udid=$(xcrun simctl list devices available --json | jq -r '
+            .devices
+            | to_entries
+            | map(select(.key | contains("SimRuntime.iOS-")))
+            | sort_by(.key
+                | capture("iOS-(?<major>[0-9]+)-(?<minor>[0-9]+)")
+                | [(.major | tonumber), (.minor | tonumber)])
+            | last
+            | .value
+            | map(select(.name | startswith("iPhone")))
+            | last
+            | .udid')
+          if [ -z "$udid" ] || [ "$udid" = "null" ]; then
+            echo "::error::No iOS iPhone simulator available on this runner"
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "Using simulator $udid"
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+          # Boot ahead of time so a cold first boot cannot time out the tests.
+          xcrun simctl boot "$udid" || true
+          xcrun simctl bootstatus "$udid" -b
+
+      # CODE_SIGNING_ALLOWED=NO: the runner has no certificates and a simulator
+      # build needs none. This keeps CI green independent of Config/App.xcconfig.
+      - name: Build
+        run: |
+          xcodebuild build \
+            -project TheTrades.xcodeproj \
+            -scheme TheTrades \
+            -configuration Debug \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -derivedDataPath "$DERIVED_DATA" \
+            -clonedSourcePackagesDirPath "$SPM_CACHE" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Test
+        run: |
+          xcodebuild test \
+            -project TheTrades.xcodeproj \
+            -scheme TheTrades \
+            -configuration Debug \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            -derivedDataPath "$DERIVED_DATA" \
+            -clonedSourcePackagesDirPath "$SPM_CACHE" \
+            -resultBundlePath TestResults.xcresult \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestResults
+          path: TestResults.xcresult
+          retention-days: 7
+
+  lint:
+    name: SwiftLint
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Install SwiftLint
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+          HOMEBREW_NO_ANALYTICS: 1
+        run: which swiftlint || brew install swiftlint
+
+      - name: Lint
+        run: swiftlint lint --strict --reporter github-actions-logging

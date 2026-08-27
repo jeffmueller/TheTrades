@@ -46,8 +46,8 @@ struct LibraryItem: Identifiable, Codable, Sendable, Hashable {
         }
     }
 
-    static func movie(id: Int, title: String, year: String?, posterPath: String?) -> LibraryItem {
-        LibraryItem(
+    static func movie(id: Int, title: String, year: String?, posterPath: String?) -> Self {
+        Self(
             id: "movie-\(id)",
             title: title,
             subtitle: year,
@@ -57,8 +57,8 @@ struct LibraryItem: Identifiable, Codable, Sendable, Hashable {
         )
     }
 
-    static func tvShow(id: Int, name: String, yearRange: String?, posterPath: String?) -> LibraryItem {
-        LibraryItem(
+    static func tvShow(id: Int, name: String, yearRange: String?, posterPath: String?) -> Self {
+        Self(
             id: "tv-\(id)",
             title: name,
             subtitle: yearRange,
@@ -68,8 +68,8 @@ struct LibraryItem: Identifiable, Codable, Sendable, Hashable {
         )
     }
 
-    static func person(id: Int, name: String, department: String?, profilePath: String?) -> LibraryItem {
-        LibraryItem(
+    static func person(id: Int, name: String, department: String?, profilePath: String?) -> Self {
+        Self(
             id: "person-\(id)",
             title: name,
             subtitle: department,

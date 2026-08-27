@@ -121,8 +121,12 @@ actor TMDBClient {
             throw TMDBError.invalidURL
         }
 
+        guard let token = TMDBConfiguration.bearerToken else {
+            throw TMDBError.missingAPIToken
+        }
+
         var request = URLRequest(url: url)
-        request.setValue("Bearer \(Secrets.tmdbBearerToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
         let data: Data
@@ -150,6 +154,7 @@ actor TMDBClient {
 }
 
 enum TMDBError: LocalizedError {
+    case missingAPIToken
     case invalidURL
     case invalidResponse
     case httpError(statusCode: Int)
@@ -158,6 +163,12 @@ enum TMDBError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
+        case .missingAPIToken:
+            return """
+                No TMDB API token is configured. Copy \
+                Config/Local.example.xcconfig to Config/Local.xcconfig, set \
+                TMDB_BEARER_TOKEN to your TMDB API Read Access Token, and build again.
+                """
         case .invalidURL:
             return "Invalid URL"
         case .invalidResponse:

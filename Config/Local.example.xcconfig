@@ -1,0 +1,28 @@
+// Copy this file, then edit the copy:
+//
+//     cp Config/Local.example.xcconfig Config/Local.xcconfig
+//
+// Config/Local.xcconfig is gitignored. Nothing here is required to build and
+// run in the simulator or to run the tests -- it is only needed for live TMDB
+// data and for device/TestFlight builds.
+//
+// Set ONLY the variables below. Do not set PRODUCT_BUNDLE_IDENTIFIER directly:
+// this file is included by both the app and the test target, and the two
+// bundles must not share an identifier.
+//
+// Note that '//' begins a comment in an xcconfig file. A TMDB v4 read token is
+// a JWT (base64url, no slashes), so it pastes in safely without quoting.
+
+// Your TMDB "API Read Access Token" from
+// https://www.themoviedb.org/settings/api -- the long v4 token, not the short
+// v3 API key. Without it the app builds and runs but shows an error card
+// instead of data.
+TMDB_BEARER_TOKEN =
+
+// Your reverse-DNS prefix. Needed only for device builds; the resulting App ID
+// must be registered to the team below.
+// TT_BUNDLE_ID_PREFIX = com.yourdomain
+
+// Your 10-character Apple Developer Team ID. Needed only for device builds,
+// archiving, and TestFlight.
+// DEVELOPMENT_TEAM = ABCDE12345
