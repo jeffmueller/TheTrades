@@ -38,8 +38,14 @@ struct SettingsView: View {
             }
 
             Section {
+                // TMDB's attribution terms require their logo, not just the
+                // disclaimer below.
                 Link(destination: URL(string: "https://www.themoviedb.org")!) {
-                    Label("The Movie Database", systemImage: "link")
+                    Image("TMDBLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 16)
+                        .accessibilityLabel("The Movie Database")
                 }
             } header: {
                 Text("About")
