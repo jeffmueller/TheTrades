@@ -1,0 +1,33 @@
+// Build settings for the TheTrades app target.
+//
+// Everything here is a default that lets a fresh clone build and run in the
+// iOS Simulator with no edits. For device builds, code signing, or live TMDB
+// data, copy Config/Local.example.xcconfig to Config/Local.xcconfig and fill
+// it in. That file is gitignored and is included at the bottom, so its values
+// win over the defaults here.
+
+// -- identity ---------------------------------------------------------------
+// A fork must not claim the upstream bundle ID. Override the prefix in
+// Config/Local.xcconfig with your own reverse-DNS domain.
+TT_BUNDLE_ID_PREFIX = com.example
+PRODUCT_BUNDLE_IDENTIFIER = $(TT_BUNDLE_ID_PREFIX).TheTrades
+
+// -- signing ----------------------------------------------------------------
+// Empty by default: the simulator needs no team, and an empty value is what
+// keeps a fresh clone building. Set DEVELOPMENT_TEAM in Config/Local.xcconfig
+// for device builds and TestFlight.
+DEVELOPMENT_TEAM =
+CODE_SIGN_STYLE = Automatic
+CODE_SIGN_IDENTITY = Apple Development
+// Xcode's own simulator default, restated so the unconditional line above
+// cannot demand a real certificate on a machine that has none.
+CODE_SIGN_IDENTITY[sdk=iphonesimulator*] = -
+
+// -- TMDB -------------------------------------------------------------------
+// Leave empty here; the real token goes in Config/Local.xcconfig. With no
+// token the app still builds and launches, and requests fail with a message
+// that says how to fix it.
+TMDB_BEARER_TOKEN =
+INFOPLIST_KEY_TMDBBearerToken = $(TMDB_BEARER_TOKEN)
+
+#include? "Local.xcconfig"
